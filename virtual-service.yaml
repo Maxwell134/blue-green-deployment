@@ -1,0 +1,33 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ .Values.app.name }}-virtual-service
+spec:
+  hosts:
+    - {{ .Values.ingress.hosts | first }}
+  gateways:
+    - my-app-gateway  # Use your gateway here
+  http:
+    - route:
+        - destination:
+            host: {{ .Values.service.name }}
+            subset: {{ .Values.blue.version }}   # Blue deployment
+          weight: {{ .Values.blue.trafficWeight }}
+        - destination:
+            host: {{ .Values.service.name }}
+            subset: {{ .Values.green.version }}  # Green deployment
+          weight: {{ .Values.green.trafficWeight }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: {{ .Values.app.name }}-destination-rule
+spec:
+  host: {{ .Values.service.name }}
+  subsets:
+    - name: {{ .Values.blue.version }}
+      labels:
+        version: {{ .Values.blue.version }}
+    - name: {{ .Values.green.version }}
+      labels:
+        version: {{ .Values.green.version }}
